@@ -3,9 +3,13 @@ GNT
 Python programs for operating a GNT4604 paper tape reader / punch via a serial port.
 
 GNTread <infile> -- read a paper tape as raw bytes into <infile>.  If <infile> exists it will be overwritten.
+  
 GNTRAW <outfile> -- punch <outfile> as raw bytes to paper tape with no translation.
+  
 GNT900 <outfile> -- punch <outfile> assumed to be UTF-8 with translation of certain non-ASCII character found in Elliott 900 telecode.
+  
 GNTBIN <outfile> -- punch <outfile> assumed to be a sequence of decimal numbers representing 8 bit codes.
+  
 GNTtest          -- a test program for verifying delay parameter in driving serial port
 
 Note (1): the GNT900 and GNTBIN programs relate to paper tape encodings used by my Elliott 900 Simulator.
