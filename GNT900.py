@@ -27,8 +27,8 @@ import sys
 import time
 
 def tidyChars (buf):
-    
-    buf = buf.replace("½",  "#")
+
+    buf = buf.replace("½", "#")
     buf = buf.replace("£", "#")
     buf = buf.replace("‘", "'")
     buf = buf.replace("’", "`")
@@ -40,7 +40,7 @@ def tidyChars (buf):
 # Function to replace <! 0 !>,<! 00 !>, <! 000 !>,  <! R !>, <! r !>
 
 def tidyBlanks (buf):
-    
+
     buf =  buf.replace("<! 0 !>", "\x00")
     buf =  buf.replace("<! 00 !>", "\x00")
     buf =  buf.replace("<! 000 !>", "\x00")
@@ -50,24 +50,24 @@ def tidyBlanks (buf):
 # Function to replace newlines by crlf sequences
 
 def tidyNewlines (buf):
-    
+
     buf =  buf.replace("\n", "\r\n")
     return buf.replace("\r\n\r\n", "\r\n\n")
-    
+
 # Function to detect and replace halt code markers
 
 def tidyHaltCodes (buf):
-    
+
     halt = "\024"
     buf =  buf.replace("<! halt !>", halt)
     buf =  buf.replace("<! Halt !>",   halt)
     buf =  buf.replace("<! H !>",      halt)
     return buf.replace("<! h !>",      halt)
-    
+
 # Function to trim leader and trailer off a buffer
 
 def trim(buf):
-    
+
     # Trim off header
     nxt = 0
     for i in range(len(buf)):
@@ -85,15 +85,15 @@ def trim(buf):
     buf = buf[:nxt+1]
 
     return buf
-    
+
 # Function to read in a tape on current serial port ser
 
 def readTape(ser):
 
     ser.timeout = 0.1 # Timeout on read to detect end of tape
-    
+
     reel = 1000 * 12 * 10 # Length of roll of tape (1000') in characters
-    
+
     buf = bytearray(reel)
     chCount = 0
 
@@ -125,11 +125,11 @@ def verifyTape(b1, b2):
             print(b2[i])
             sys.exit(1)
     print("Tape verified ok")
-    
+
 # Function to compute parity
 
 def evenParity(code):
-    x = code 
+    x = code
     bit = 0
     parity = False
     while x:
@@ -147,7 +147,7 @@ inEvents = 0
 
 # Function to punch a character
 def punchCh(ser, ch):
-    
+
     global inEvents, outEvents
 
 
@@ -155,7 +155,7 @@ def punchCh(ser, ch):
     dc1 = 17 # X-ON
     dc3 = 19 # X-OFF
 
-    # Pause after each punched character to allow GNT to signal flow 
+    # Pause after each punched character to allow GNT to signal flow
     # control
     delay      = 1 / 80 # experimentally determined
 
@@ -200,11 +200,11 @@ def punchBuffer(ser, buf):
 def punchRunout(ser):
     for i in range(90):
         punchCh(ser, 0)
-        
+
 # Main program
 
 @click.command()
-@click.argument('infile', type=click.File('r'))
+@click.argument('infile', type=click.File('r', encoding='utf-8-sig'))
 @click.argument('port', default='/dev/ttyUSB0')
 def GNTpunch (infile, port):
 
@@ -221,20 +221,23 @@ def GNTpunch (infile, port):
     except serial.SerialException as e:
             print("Could not open serial port ", ser.name, e)
             sys.exit(1)
-            
+
     # Read and tidy file
-    buf = infile.read()[1:] # first character seems to be some sort of flag?
+    buf = infile.read() # use of utf-8-sig should deal with BOM at beginning
+    if ord(buf[0]) == 255:
+        print("??BOM not removed??")
+        sys.exit(1)
     infile.close()
     buf = tidyNewlines(buf)
     buf = tidyHaltCodes(buf)
-    buf = tidyBlanks(buf) 
+    buf = tidyBlanks(buf)
     buf = tidyChars(buf)
     buf = trim(buf) # get rid of any leading or trailing blanks
-    
+
     if buf.find("!<") != -1:
         print("Unknown <! ... !> found\n")
         sys.exit(1)
-        
+
     # Punch tape
     # Punch leader
     punchRunout(ser)
@@ -242,7 +245,7 @@ def GNTpunch (infile, port):
     outputTape = punchBuffer(ser, buf)
     # Punch trailer
     punchRunout(ser)
-    
+
     # Read back and verify the tape
 
     # Prompt user

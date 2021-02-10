@@ -3,7 +3,7 @@
 
 # Punched test tape is read back in and verified.
 
-print("\nGNTtest - Andrew Herbert - 19/08/2019\n")
+print("\nGNTtest - Andrew Herbert - 08/02/2021\n")
 
 # GNT4604 configuration
 #
@@ -14,7 +14,7 @@ print("\nGNTtest - Andrew Herbert - 19/08/2019\n")
 # Reader - NORM
 # Punch - NORM
 # Speed - HIGH
-# DIP switches:
+# Dip switches:
 # SW1 ECHO - OFF
 # SW2 - LEADER - OFF (Normal leader)
 # SW3 - DC CODES  - OFF (No X-on/X-off control for reader)
@@ -101,28 +101,36 @@ def punchCh(ser, ch):
 
     # Pause after each punched character to allow GNT to signal flow 
     # control
-    delay      = 1 / 80 # experimentally determined
-
+    delay = 1 / 80 # 80 # experimentally determined
     # Look for flow control
+    #print("!", end="")
     while ser.in_waiting > 0:
+        #print("<", end="")
         inEvents=inEvents+1
         b = ser.read (1)
+        #print("[", b, end="")
         if b[0] == dc3:
             time.sleep (delay)
             b = ser.read (1)
+            #print("]", b, end="")
             if b[0] != dc1:
                 print ("DC3 not followed by DC1 - ", b[0])
                 sys.exit (1)
         else:
             print ("DC3 expected, got ", b[0])
             sys.exit (1)
+        #print(">", end="")
 
     # Output character to punch
+    #print("+", end="")
     while ser.out_waiting > 0:
+        #print("-", end="")
         outEvents=outEvents+1
         while ser.out_waiting > 0:
+            #print(".", end="")
             time.sleep (delay)
     ser.write (bytes([ch]))
+    #print("%", end="")
 
     # Allow time for GNT to send flow control codes
     time.sleep (delay)
@@ -136,7 +144,7 @@ def punchBuffer(ser,buf):
             punchCh(ser, ch)
             
 def punchRunout(ser):
-    for i in range(90):
+    for i in range(120):
         punchCh(ser, 0)
 
 def testSequence(cycles):
@@ -180,6 +188,7 @@ def GNTtest (cycles, port):
                 'Could not open serial port {}: {}\n'.format(ser.name,
                                                                 e))
             sys.exit(1)
+    print("Port", ser.port, "opened ok\n")
             
     # Generate test tape
     buf = testSequence(cycles)

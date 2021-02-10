@@ -37,7 +37,9 @@ def readTape(ser):
     while ser.in_waiting <= 0:
         time.sleep(0.1)
     for i in range(reel):
+        print(".", end="")
         b = ser.read(1) # read one character
+        print("+", end="")
         if len(b) == 0:
             break # tape has run through reader
         else:
