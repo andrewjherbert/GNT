@@ -3,7 +3,7 @@
 
 # Punched tape is read back in and verified against file.
 
-print("\nGNT900 - Andrew Herbert - 28/08/2019\n")
+print("\nGNT900 - Andrew Herbert - 26/10/2026\n")
 
 # GNT4604 configuration
 #
@@ -204,7 +204,7 @@ def punchRunout(ser):
 # Main program
 
 @click.command()
-@click.argument('infile', type=click.File('r', encoding='utf-8-sig'))
+@click.argument('infile', type=click.File('r'))
 @click.argument('port', default='/dev/ttyUSB0')
 def GNTpunch (infile, port):
 
@@ -223,10 +223,10 @@ def GNTpunch (infile, port):
             sys.exit(1)
 
     # Read and tidy file
-    buf = infile.read() # use of utf-8-sig should deal with BOM at beginning
-    if ord(buf[0]) == 255:
-        print("??BOM not removed??")
-        sys.exit(1)
+    buf = infile.read()
+    # remove BOM if present
+    if len(buf) > 0 and ord(buf[0]) == 65279:
+        buf = buf[1:]
     infile.close()
     buf = tidyNewlines(buf)
     buf = tidyHaltCodes(buf)

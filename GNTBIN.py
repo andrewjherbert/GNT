@@ -3,7 +3,7 @@
 
 # Punched tape is read back in and verified against file.
 
-print("\nGNTBIN - Andrew Herbert - 08/10/2019\n")
+print("\nGNTBIN - Andrew Herbert - 26/10/2026\n")
 
 # GNT4604 configuration
 #
@@ -172,6 +172,7 @@ def Convert (inFile):
 @click.command()
 @click.argument('infile', type=click.File('r'))
 @click.argument('port', default='/dev/ttyUSB0')
+
 def GNTpunch (infile, port):
 
     inEvents = 0
@@ -187,12 +188,13 @@ def GNTpunch (infile, port):
     except serial.SerialException as e:
             print("Could not open serial port ", ser.name, e)
             sys.exit(1)
-            
+
     # Read and tidy file
     inBuf = infile.read()
     infile.close()
+
     # Remove BOM if present
-    if ord(inBuf[0]) == 65279:
+    if len(inBuf) > 0 and ord(inBuf[0]) == 65279:
         inBuf = inBuf[1:]
     outBuf = Convert(inBuf)
         
